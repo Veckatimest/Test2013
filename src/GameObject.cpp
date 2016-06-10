@@ -7,32 +7,18 @@ GameObject::GameObject(FPoint startPos)
 	alive = true;
 }
 
-GameObject::GameObject(FPoint startPos, FPoint startSpeed, IRect bounds, float objectRadius)
+GameObject::GameObject(FPoint startPos, FPoint startSpeed, float objectRadius)
 {
 	position = startPos;
 	speed = startSpeed;
-	boundingRect = bounds;
 	radius = objectRadius;
 	alive = true;
 }
+
 /// вроде как мы живем в системе у которой координаты начинаются с левого нижнего угла, а не левого верхнего
-void GameObject::updatePosition(float dt)
+void GameObject::Update(float dt)
 {
 	position += speed * dt;
-	if (position.x - radius < boundingRect.x) {
-		speed.x = -speed.x;
-		position.x = radius;
-	} else if (position.x + radius > boundingRect.x + boundingRect.width) {
-		speed.x = -speed.x;
-		position.x = boundingRect.x + boundingRect.width - radius;
-	}
-	if (position.y - radius < boundingRect.y) {
-		position.y = radius;
-		speed.y = -speed.y;
-	} else if (position.y + radius < boundingRect.y + boundingRect.height) {
-		position.y = boundingRect.y + boundingRect.height - radius;
-		speed.y = -speed.y;
-	}
 }
 
 FPoint GameObject::getPosition()
@@ -56,13 +42,38 @@ bool GameObject::isPointInside(FPoint point)
 		return false;
 }
 
-void GameObject::setSpeed(FPoint new_speed)
-{
-	speed = new_speed;
-}
-
-void GameObject::kill()
+/// в теории-то разные могут быть последствия
+void GameObject::getHit()
 {
 	alive = false;
 }
 
+inline bool GameObject::isAlive()
+{
+	return alive;
+}
+
+inline float GameObject::getRadius()
+{
+	return radius;
+}
+
+void GameObject::setTexture(std::string texture)
+{
+	textureName = texture;
+}
+
+std::string GameObject::getTexture()
+{
+	return textureName;
+}
+
+void GameObject::setDestroyEffect(std::string effect)
+{
+	destroyEffectName = effect;
+}
+
+std::string GameObject::getDestroyEffect()
+{
+	return destroyEffectName;
+}

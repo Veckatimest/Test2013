@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "GameObject.h"
+#include "Target.h"
+#include "Projectile.h"
 #include "GameObjectContainer.h"
 
 #define RAND_MAX 100
@@ -25,7 +27,7 @@ void GameObjectContainer::setProjectileSpeed(float inputProjectileSpeed)
 void GameObjectContainer::PushGameObject(FPoint position, FPoint speed, float radius)
 {
 	//GameObject(FPoint startPos, FPoint startSpeed, IRect bounds, float radius);
-	objectList.push_back(GameObject(position, speed, sceneRect, radius));
+	objectList.push_back(Target(position, speed, radius));
 }
 
 void GameObjectContainer::PushRandGameObject()
@@ -42,33 +44,62 @@ void GameObjectContainer::PushRandGameObject()
 	speed.x = random_var * maxGameObjectSpeed - maxGameObjectSpeed / 2;
 	random_var = (float)std::rand() / (float)RAND_MAX;
 	speed.y = random_var * maxGameObjectSpeed - maxGameObjectSpeed / 2;
-	objectList.push_back(GameObject(startPos, speed, sceneRect, GameObjectRadius));
+	objectList.push_back(Target(startPos, speed, GameObjectRadius));
 }
 
 void GameObjectContainer::PushProjectile(FPoint position, FPoint destination)
 {
 	FPoint speedVect = (destination - position).Normalized() * projectileSpeed;
 	//GameObject(FPoint startPos, FPoint startSpeed, IRect bounds, float radius);
-	projectileList.push_back(GameObject(position, speedVect, sceneRect, 15));
+	projectileList.push_back(Projectile(position, speedVect, 15));
 }
 
 /// “ак-то можно было бы наверное устроить тут разбиение сцены на пр€моугольники
 /// Ќо так имеет смысл делать если надо детектировать много столковений со многими компонентами.
 void GameObjectContainer::Update(float dt)
 {
-	for (GameObject item : projectileList)
+	//ѕодвигаем все снар€ды и проверим стены
+	for (std::list<GameObject>::iterator projectile = projectileList.begin; projectile != projectileList.end(); ++projectile)
 	{
-		item.Update(dt);
+		projectile->Update(dt);
+		checkWallCollision(*projectile);
 	}
-
-	for (GameObject item : objectList)
+		
+	//ѕодвигаем таргеты и посмотрим нет ли столкновений.
+	for (std::list<GameObject>::iterator targetIt = objectList.begin; targetIt != objectList.end(); ++targetIt)
 	{
-		item.Update(dt);
-		for (GameObject collider : projectileList)
+		targetIt->Update(dt);
+		checkWallCollision(*targetIt);
+		for (std::list<GameObject>::iterator colliderIt = projectileList.begin; colliderIt != projectileList.end(); ++colliderIt)
+		if (targetIt->isCollided(*colliderIt))
 		{
-			if (item.isCollided(collider)) item.getHit();
+			targetIt->getHit();
+			if (!targetIt->isAlive())
+			{
+				ParticleEffectPtr targetEff = _effCont.AddEffect(targetIt->getDestroyEffect());
+				targetEff->SetPos(targetIt->getPosition());
+				targetEff->Reset();
+			}
+			ParticleEffectPtr projEff = _effCont.AddEffect(colliderIt->getDestroyEffect());
+			projEff->SetPos(colliderIt->getPosition());
+			projEff->Reset();
 		}
 	}
+}
+
+void GameObjectContainer::checkWallCollision(GameObject& g_object)
+{
+	float radius = g_object.getRadius();
+	FPoint pos = g_object.getPosition();
+	if (pos.x - radius < sceneRect.x) g_object.hitWall(FPoint(1, 0));
+	else if (pos.x + radius > sceneRect.width) g_object.hitWall(FPoint(-1, 0));
+	if (pos.y - radius < sceneRect.y) g_object.hitWall(FPoint(0, 1));
+	else if (pos.y + radius > sceneRect.height) g_object.hitWall(FPoint(0, -1));
+}
+
+void checkForDestroy(GameObject& g_object)
+{
+
 }
 
 
