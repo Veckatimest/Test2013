@@ -5,12 +5,28 @@ Projectile::Projectile(FPoint startPos, FPoint startSpeed, float radius) : GameO
 
 void Projectile::hitWall(FPoint normal)
 {
-	alive = false;
+	_alive = false;
 }
 
-void Projectile::attachMoveEffect(ParticleEffectPtr effect)
+void Projectile::Update(float dt)
 {
-	moveEffectPtr = effect;
-	effect->SetPos(position);
+	GameObject::Update(dt);
+	if (_moveEffectPtr){
+		_moveEffectPtr->SetPos(_position);
+	}
+}
+
+void Projectile::AttachMoveEffect(ParticleEffectPtr effect)
+{
+	_moveEffectPtr = effect;
+	effect->SetPos(_position);
 	effect->Reset();
+}
+
+void Projectile::Finalize()
+{
+	if (_moveEffectPtr){
+		_moveEffectPtr->Finish();
+		_moveEffectPtr = NULL;
+	}
 }

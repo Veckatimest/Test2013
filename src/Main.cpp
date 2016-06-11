@@ -52,8 +52,9 @@ void getSettingsFromIniFile(std::string path, int &read, int &write)
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+	std::srand(std::time_t(NULL));
 	int readparam, writeparam;
-	getSettingsFromIniFile("myconf", readparam, writeparam);
+	//getSettingsFromIniFile("myconf", readparam, writeparam);
 	ParticleSystem::SetTexturesPath("textures/Particles");
 
 	Core::fileSystem.SetWriteDirectory("./write_directory");

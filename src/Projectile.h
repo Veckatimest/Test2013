@@ -6,8 +6,10 @@ class Projectile : public GameObject
 public:
 	Projectile(FPoint startPos, FPoint startSpeed, float objectRadius);
 	virtual void hitWall(FPoint normal) override;
+	virtual void Update(float dt) override;
 	std::string getMoveEffect();
-	void attachMoveEffect(ParticleEffectPtr effect);
+	void AttachMoveEffect(ParticleEffectPtr effect);
+	void Finalize();
 private:
-	ParticleEffectPtr moveEffectPtr;
+	ParticleEffectPtr _moveEffectPtr;
 };

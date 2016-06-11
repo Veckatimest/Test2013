@@ -5,37 +5,31 @@ class GameObject
 public:
 	GameObject(FPoint startPos);
 	GameObject(FPoint startPos, FPoint startSpeed, float objectRadius);
-	bool isCollided(GameObject& other);
-	bool isPointInside(FPoint point);
-	FPoint getPosition();
-	float getRadius();
-	void Update(float dt);
-
-	// Вызывается при столкновении со стеной, принимает вектор нормали к поверхности
-	virtual void hitWall(FPoint normal) = 0;
-
-	//Ситуации могут быть разные, но в нашем случае дефолтное поведение гейм обжекта всех устроит
-	virtual void getHit();
-
-	bool isAlive();
-	void setTexture(std::string texture);
+	virtual void Update(float dt);
+	bool isCollided(GameObject& other) const;
+	bool isPointInside(FPoint point) const;
+	FPoint getPosition() const;
+	FPoint getSpeed() const;
+	float getRadius() const;
+	bool isAlive() const;
+	
+	virtual void hitWall(FPoint normal) = 0; // Вызывается при столкновении со стеной, принимает вектор нормали к поверхности
+	virtual void getHit(); //Ситуации могут быть разные, но в нашем случае дефолтное поведение гейм обжекта всех устроит
+	
+	void setTexture(Render::Texture* texture);
 	void setDestroyEffect(std::string effect);
-	std::string getTexture();
-	std::string getDestroyEffect();
+	Render::Texture* getTexture() const;
+	std::string getDestroyEffect() const;
 
 protected:
-	/// Не пора ли удалить
-	bool alive;
-	/// Положение объекта
-	FPoint position;
-	/// Векторная скорость
-	FPoint speed;
-	/// Радиус круглого объекта (а мы делаем круглые объекты)
-	float radius;
+	bool _alive; // Не пора ли удалить
+	FPoint _position; // Положение объекта
+	FPoint _speed; // Векторная скорость
+	float _radius; // Радиус круглого объекта (а мы делаем круглые объекты)
 
 private:
 	/// Отображение
-	std::string textureName;
-	std::string destroyEffectName;
+	Render::Texture* _texture;
+	std::string _destroyEffectName;
 };
 

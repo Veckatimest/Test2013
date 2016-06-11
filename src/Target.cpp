@@ -8,11 +8,10 @@ Target::Target(FPoint startPos, FPoint startSpeed, float radius) : GameObject(st
 /// если normal.x = 1, значит с левой
 void Target::hitWall(FPoint normal)
 {
-	
-	if ((normal.x > 0 && speed.x < 0) || // летели влево и врезались
-			(normal.x < 0 && speed.x > 0))// летели вправо
-		speed.x = -speed.x;
-	if ((normal.y > 0 && speed.y < 0) || // ...вверх
-			(normal.y < 0 && speed.y > 0))// ...вниз
-		speed.y = -speed.y;
+	if ((normal.x > 0 && _speed.x < 0) || // летели влево и врезались
+			(normal.x < 0 && _speed.x > 0))// летели вправо
+		_speed.x = -_speed.x;
+	if ((normal.y > 0 && _speed.y < 0) || // ...вверх
+			(normal.y < 0 && _speed.y > 0))// ...вниз
+		_speed.y = -_speed.y;
 }

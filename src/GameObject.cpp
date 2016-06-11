@@ -3,77 +3,82 @@
 
 GameObject::GameObject(FPoint startPos)
 {
-	position = startPos;
-	alive = true;
+	_position = startPos;
+	_alive = true;
 }
 
 GameObject::GameObject(FPoint startPos, FPoint startSpeed, float objectRadius)
 {
-	position = startPos;
-	speed = startSpeed;
-	radius = objectRadius;
-	alive = true;
+	_position = startPos;
+	_speed = startSpeed;
+	_radius = objectRadius;
+	_alive = true;
 }
 
 /// вроде как мы живем в системе у которой координаты начинаются с левого нижнего угла, а не левого верхнего
 void GameObject::Update(float dt)
 {
-	position += speed * dt;
-}
-
-FPoint GameObject::getPosition()
-{
-	return position;
-}
-
-bool GameObject::isCollided(GameObject& other)
-{
-	if (position.GetDistanceTo(other.position) < (radius + other.radius))
-		return true;
-	else
-		return false;
-}
-
-bool GameObject::isPointInside(FPoint point)
-{
-	if (position.GetDistanceTo(point) < radius)
-		return true;
-	else
-		return false;
+	_position += _speed * dt;
 }
 
 /// в теории-то разные могут быть последствия
 void GameObject::getHit()
 {
-	alive = false;
+	_alive = false;
 }
 
-inline bool GameObject::isAlive()
+FPoint GameObject::getPosition() const
 {
-	return alive;
+	return _position;
 }
 
-inline float GameObject::getRadius()
+FPoint GameObject::getSpeed() const
 {
-	return radius;
+	return _speed;
 }
 
-void GameObject::setTexture(std::string texture)
+bool GameObject::isCollided(GameObject& other) const
 {
-	textureName = texture;
+	if (_position.GetDistanceTo(other._position) < (_radius + other._radius))
+		return true;
+	else
+		return false;
 }
 
-std::string GameObject::getTexture()
+bool GameObject::isPointInside(FPoint point) const
 {
-	return textureName;
+	if (_position.GetDistanceTo(point) < _radius)
+		return true;
+	else
+		return false;
+}
+
+bool GameObject::isAlive() const
+{
+	return _alive;
+}
+
+float GameObject::getRadius() const
+{
+	return _radius;
+}
+
+void GameObject::setTexture(Render::Texture* texture)
+{
+	_texture = texture;
+}
+
+Render::Texture* GameObject::getTexture() const
+{
+	return _texture;
 }
 
 void GameObject::setDestroyEffect(std::string effect)
 {
-	destroyEffectName = effect;
+	_destroyEffectName = effect;
 }
 
-std::string GameObject::getDestroyEffect()
+std::string GameObject::getDestroyEffect() const
 {
-	return destroyEffectName;
+	return _destroyEffectName;
 }
