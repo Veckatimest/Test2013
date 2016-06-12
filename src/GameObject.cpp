@@ -1,5 +1,7 @@
 #include "stdafx.h"
+
 #include "GameObject.h"
+
 
 GameObject::GameObject(FPoint startPos)
 {
@@ -7,12 +9,13 @@ GameObject::GameObject(FPoint startPos)
 	_alive = true;
 }
 
-GameObject::GameObject(FPoint startPos, FPoint startSpeed, float objectRadius)
+GameObject::GameObject(FPoint startPos, FPoint startSpeed, float objectRadius, EffectsDelegate* p_eff_c)
 {
 	_position = startPos;
 	_speed = startSpeed;
 	_radius = objectRadius;
 	_alive = true;
+	p_effDel = p_eff_c;
 }
 
 /// вроде как мы живем в системе у которой координаты начинаются с левого нижнего угла, а не левого верхнего
@@ -25,6 +28,9 @@ void GameObject::Update(float dt)
 void GameObject::getHit()
 {
 	_alive = false;
+	ParticleEffectPtr projEff = p_effDel->AddEffect(_destroyEffectName);
+	projEff->SetPos(_position);
+	projEff->Reset();
 }
 
 FPoint GameObject::getPosition() const

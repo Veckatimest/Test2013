@@ -20,12 +20,15 @@ public:
 	void Update(float dt);
 	
 	void SetProjectileSpeed(float inputProjectileSpeed);
+	void SetTargetCount(int count);
+	void SetPlayTime(int time);
 	void SetTargetTexture(Render::Texture* texture);
 	void SetTargetDestroyEffect(std::string effName);
 	void SetProjectileTexture(Render::Texture* texture);
 	void SetProjectileMoveEffect(std::string effName);
 	void SetProjectileDestroyEffect(std::string effName);
 	void SetSceneBounds(IRect rect);
+	void SetEffectsDelegate(EffectsDelegate* effdel);
 
 	const std::list<Target>& GetTargets();
 	const std::list<Projectile>& GetProjectiles();
@@ -34,12 +37,13 @@ private:
 	GameObjectContainer(GameObjectContainer const&) = delete;
 	GameObjectContainer& operator= (GameObjectContainer const&) = delete;
 	void checkWallCollision(GameObject& g_object);
+	bool checkForDestroy(GameObject& g_object);
 
 private:
 	const float _maxGameObjectSpeed = 100.0f;
 	const float _targetRadius = 30.0f;
 	IRect _sceneRect;
-	float _projectileSpeed = 60.0f;
+	float _projectileSpeed = 300.0f;
 	// возможно это следует вынести в фабрики прожектайлов и таргетов...
 	Render::Texture* _targetTex;
 	std::string _targetDestrEff;
@@ -50,5 +54,5 @@ private:
 	// ¬от бы иметь умные указатели и создать коллекцию типа GameObject
 	std::list<Target> _targetList;
 	std::list<Projectile> _projectileList;
-	EffectsContainer _effCont;
+	EffectsDelegate* _effDel;
 };

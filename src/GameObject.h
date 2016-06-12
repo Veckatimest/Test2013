@@ -1,10 +1,11 @@
 #pragma once
+#include "EffectsDelegate.h"
 
 class GameObject
 {
 public:
 	GameObject(FPoint startPos);
-	GameObject(FPoint startPos, FPoint startSpeed, float objectRadius);
+	GameObject(FPoint startPos, FPoint startSpeed, float objectRadius, EffectsDelegate* p_eff_c);
 	virtual void Update(float dt);
 	bool isCollided(GameObject& other) const;
 	bool isPointInside(FPoint point) const;
@@ -26,6 +27,7 @@ protected:
 	FPoint _position; // Положение объекта
 	FPoint _speed; // Векторная скорость
 	float _radius; // Радиус круглого объекта (а мы делаем круглые объекты)
+	EffectsDelegate* p_effDel;
 
 private:
 	/// Отображение

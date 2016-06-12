@@ -1,12 +1,15 @@
 #include "stdafx.h"
+#include "SettingsObj.h"
 #include "TestWidget.h"
-#include "GameObjectContainer.h"
 
 const float radToDeg = (180.0f / math::PI);
 
 TestWidget::TestWidget(const std::string& name, rapidxml::xml_node<>* elem)
 	: Widget(name)
-	, wsize(0, 0, 1024, 768)
+	, _sceneRect(0, 0, Render::device.Width(), Render::device.Height())
+	, _effCont()
+	, _effDel(_effCont)
+	, _gameState(GameState::onPause)
 	//, _curTex(0)
 	//, _timer(0)
 	//, _angle(0)
@@ -19,34 +22,52 @@ TestWidget::TestWidget(const std::string& name, rapidxml::xml_node<>* elem)
 void TestWidget::Init()
 {
 	Render::Texture* tex1 = Core::resourceManager.Get<Render::Texture>("btnStart_Text");
-	Render::Texture* tex2 = Core::resourceManager.Get<Render::Texture>("Circle");
-	Render::Texture* smile = Core::resourceManager.Get<Render::Texture>("Smile");
+	Render::Texture* fighter = Core::resourceManager.Get<Render::Texture>("Fighter");
 	Render::Texture* rocket = Core::resourceManager.Get<Render::Texture>("Rocket");
+	_background = Core::resourceManager.Get<Render::Texture>("Background");
 	GameObjectContainer& cont = GameObjectContainer::getInstance();
-	cont.SetTargetTexture(smile);
-	cont.SetTargetDestroyEffect("FindItem2");
+	SettingsObj& settings = SettingsObj::getInstance();
+	cont.SetEffectsDelegate(&_effDel);
+	cont.SetTargetTexture(fighter);
+	cont.SetTargetDestroyEffect("Explode");
 	cont.SetProjectileTexture(rocket);
-	cont.SetProjectileMoveEffect("Iskra");
-	cont.SetProjectileDestroyEffect("FindItem2");
-	cont.SetSceneBounds(wsize);
+	cont.SetProjectileMoveEffect("Engine");
+	cont.SetProjectileDestroyEffect("Explode");
+	cont.SetSceneBounds(_sceneRect);
+	cont.SetProjectileSpeed(settings.getSpeed());
+	_timer = settings.getTime();
+	
+	for (int i = 0; i < settings.getCount(); i++)
+	{
+		cont.PushRandGameObject();
+	}
+}
 
-	cont.PushRandGameObject();
-	cont.PushRandGameObject();
-	cont.PushRandGameObject();
-	cont.PushRandGameObject();
-	cont.PushRandGameObject();
-	cont.PushRandGameObject();
-	cont.PushRandGameObject();
-	cont.PushRandGameObject();
-	cont.PushRandGameObject();
+void TestWidget::drawGameObject(const GameObject& go, bool rotate)
+{
+	Render::device.PushMatrix();
+	FPoint pos = go.getPosition();
+	Render::Texture* curtex = go.getTexture();
+	Render::device.MatrixTranslate(pos.x, pos.y, 0);
+	IRect texRect = curtex->getBitmapRect();
+	FRect rect(texRect);
+	FRect uv(0, 1, 0, 1);
+	float scale = 2 * go.getRadius() / rect.Width();
+	curtex->TranslateUV(rect, uv);
+	Render::device.MatrixScale(scale);
+	if (rotate)
+	{
+		FPoint dir = go.getSpeed().Normalized();
+		float angle = dir.GetAngle() * radToDeg;
+		Render::device.MatrixRotate(math::Vector3(0, 0, 1.0f), angle + 90);
+	}
+		
+	Render::device.MatrixTranslate(-texRect.width * 0.5f, -texRect.height * 0.5f, 0.0f);
+	curtex->Bind();
 
-	/*void SetProjectileSpeed(float inputProjectileSpeed);
-	void SetTargetTexture(Render::Texture* texture);
-	void SetTargetDestroyEffect(std::string effName);
-	void SetProjectileTexture(Render::Texture* texture);
-	void SetProjectileMoveEffect(std::string effName);
-	void SetProjectileDestroyEffect(std::string effName);
-	void SetSceneBounds(IRect rect);*/
+	Render::DrawRect(rect, uv);
+	//curtex->Draw();
+	Render::device.PopMatrix();
 }
 
 void TestWidget::Draw()
@@ -57,132 +78,40 @@ void TestWidget::Draw()
 	IPoint mouse_pos = Core::mainInput.GetMousePos();
 
 	GameObjectContainer& cont = GameObjectContainer::getInstance();
-	const std::list<Target>& targets = cont.GetTargets();
+	_background->Draw(IPoint(0, 0));
 
-	for (std::list<Target>::const_iterator tgIt = targets.begin(); tgIt != targets.end(); ++tgIt)
+	if (_gameState == GameState::inProcess)
 	{
-		//
-		// Проталкиваем в стек текущее преобразование координат, чтобы в дальнейшем
-		// можно было восстановить это преобразование вызовом PopMatrix.
-		//
-		Render::device.PushMatrix();
-		//
-		// Изменяем текущее преобразование координат, перемещая центр координат в позицию мыши
-		// и поворачивая координаты относительно этого центра вокруг оси z на угол _angle.
-		//
-		FPoint pos = tgIt->getPosition();
-		Render::Texture* curtex = tgIt->getTexture();
-
-		Render::device.MatrixTranslate(pos.x, pos.y, 0);
-		//Render::device.MatrixRotate(math::Vector3(0, 0, 1), 0);
-		IRect texRect = curtex->getBitmapRect();
-
-		//
-		// При отрисовке текстуры можно вручную задавать UV координаты той части текстуры,
-		// которая будет натянута на вершины спрайта. UV координаты должны быть нормализованы,
-		// т.е., вне зависимости от размера текстуры в текселях, размер любой текстуры
-		// равен 1 (UV координаты задаются в диапазоне 0..1, хотя ничто не мешает задать их
-		// больше единицы, при этом в случае установленной адресации текстуры REPEAT, текстура
-		// будет размножена по этой стороне соответствующее количество раз).
-		//
-
-		FRect rect(texRect);
-		FRect uv(0, 1, 0, 1);
-
-		float scale = 2 * tgIt->getRadius() / rect.Width();
-
-		curtex->TranslateUV(rect, uv);
-
-		Render::device.MatrixScale(scale);
-		Render::device.MatrixTranslate(-texRect.width * 0.5f, -texRect.height * 0.5f, 0.0f);
-
-		//
-		// Привязываем текстуру.
-		//
-		curtex->Bind();
-
-		//
-		// Метод DrawRect() выводит в графическое устройство квадратный спрайт, состоящий их двух
-		// примитивов - треугольников, используя при этом текущий цвет для вершин и привязанную (binded) текстуру,
-		// если разрешено текстурирование.
-		//
-		// Перед вызовом DrawRect() должен быть вызов Texture::Bind(), либо SetTexturing(false),
-		// иначе визуальный результат будет непредсказуемым.
-		//
-		Render::DrawRect(rect, uv);
-		//curtex->Draw();
-
-		//
-		// Воостанавливаем прежнее преобразование координат, снимая со стека изменённый фрейм.
-		//
-		Render::device.PopMatrix();
+		const std::list<Target>& targets = cont.GetTargets();
+		for (std::list<Target>::const_iterator tgIt = targets.begin(); tgIt != targets.end(); ++tgIt)
+		{
+			drawGameObject(*tgIt, false);
+		}
+		const std::list<Projectile>& bullets = cont.GetProjectiles();
+		for (std::list<Projectile>::const_iterator pjIt = bullets.begin(); pjIt != bullets.end(); ++pjIt)
+		{
+			drawGameObject(*pjIt, true);
+		}
 	}
-
-	const std::list<Projectile>& bullets = cont.GetProjectiles();
-	for (std::list<Projectile>::const_iterator pjIt = bullets.begin(); pjIt != bullets.end(); ++pjIt)
+	else
 	{
-		//
-		// Проталкиваем в стек текущее преобразование координат, чтобы в дальнейшем
-		// можно было восстановить это преобразование вызовом PopMatrix.
-		//
-		Render::device.PushMatrix();
-		//
-		// Изменяем текущее преобразование координат, перемещая центр координат в позицию мыши
-		// и поворачивая координаты относительно этого центра вокруг оси z на угол _angle.
-		//
-		FPoint pos = pjIt->getPosition();
-		FPoint dir = pjIt->getSpeed().Normalized();
-		
-		Render::Texture* curtex = pjIt->getTexture();
-		float rot = dir.GetAngle();
-		Render::device.MatrixTranslate(pos.x, pos.y, 0);
-		Render::device.MatrixRotate(math::Vector3(0, 0, 1), radToDeg*rot - 90.0f);
-		IRect texRect = curtex->getBitmapRect();
-
-		//
-		// При отрисовке текстуры можно вручную задавать UV координаты той части текстуры,
-		// которая будет натянута на вершины спрайта. UV координаты должны быть нормализованы,
-		// т.е., вне зависимости от размера текстуры в текселях, размер любой текстуры
-		// равен 1 (UV координаты задаются в диапазоне 0..1, хотя ничто не мешает задать их
-		// больше единицы, при этом в случае установленной адресации текстуры REPEAT, текстура
-		// будет размножена по этой стороне соответствующее количество раз).
-		//
-
-		FRect rect(texRect);
-		FRect uv(0, 1, 0, 1);
-
-		float scale = 2 * pjIt->getRadius() / rect.Width();
-
-		curtex->TranslateUV(rect, uv);
-
-		Render::device.MatrixScale(scale);
-		Render::device.MatrixTranslate(-texRect.width * 0.5f, -texRect.height * 0.5f, 0.0f);
-
-		//
-		// Привязываем текстуру.
-		//
-		curtex->Bind();
-
-		//
-		// Метод DrawRect() выводит в графическое устройство квадратный спрайт, состоящий их двух
-		// примитивов - треугольников, используя при этом текущий цвет для вершин и привязанную (binded) текстуру,
-		// если разрешено текстурирование.
-		//
-		// Перед вызовом DrawRect() должен быть вызов Texture::Bind(), либо SetTexturing(false),
-		// иначе визуальный результат будет непредсказуемым.
-		//
-		Render::DrawRect(rect, uv);
-		//curtex->Draw();
-
-		//
-		// Воостанавливаем прежнее преобразование координат, снимая со стека изменённый фрейм.
-		//
-		Render::device.PopMatrix();
+		Render::device.SetTexturing(false);
+		Render::BeginColor(Color(0, 0, 0, 180));
+		Render::DrawRect(_sceneRect);
+		Render::EndColor();
+		Render::BeginColor(Color(51, 204, 255, 255));
+		int centerW = 300;
+		int centerH = 200;
+		Render::DrawRect(IRect(_sceneRect.width/2 - centerW / 2, _sceneRect.height/2 - centerH / 2, centerW, centerH));
+		Render::EndColor();
+		Render::BindFont("arial");
+		Render::BeginColor(Color(0, 153, 51, 255));
+		Render::PrintString(_sceneRect.width / 2, _sceneRect.height / 2 + 25, "{font size=22}You can start a game \n by pressing left button {}", 1.f, CenterAlign);
+		Render::EndColor();
+		Render::device.SetTexturing(true);
 	}
+	
 
-	//
-	// Этот вызов отключает текстурирование при отрисовке.
-	//
 	Render::device.SetTexturing(false);
 
 	//
@@ -213,6 +142,7 @@ void TestWidget::Draw()
 	//
 	// Рисуем все эффекты, которые добавили в контейнер (Update() для контейнера вызывать не нужно).
 	//
+	_effCont.Draw();
 	//_effCont.Draw();
 
 	Render::BindFont("arial");
@@ -222,23 +152,37 @@ void TestWidget::Draw()
 
 void TestWidget::Update(float dt)
 {
-	//
-	// Обновим контейнер с эффектами
-	//
-	//_effCont.Update(dt);
-	GameObjectContainer& cont = GameObjectContainer::getInstance();
-	cont.Update(dt);
+
+	if (_gameState == GameState::inProcess)
+	{
+		// Обновим контейнер с эффектами
+		_timer -= dt;
+		GameObjectContainer& cont = GameObjectContainer::getInstance();
+		_effCont.Update(dt);
+		cont.Update(dt);
+		if (_timer < 0)
+		{
+			_gameState = GameState::onPause;
+		}
+	}
+	
 }
 
 bool TestWidget::MouseDown(const IPoint &mouse_pos)
 {
-	
-	FPoint cannonPos(wsize.width / 2, 30);
+	FPoint cannonPos(_sceneRect.width / 2, 30);
 	if (Core::mainInput.GetMouseLeftButton())
 	{
-		GameObjectContainer& cont = GameObjectContainer::getInstance();
-		IPoint mouse_pos = Core::mainInput.GetMousePos();
-		cont.PushProjectile(cannonPos, FPoint(mouse_pos));
+		if (_gameState == GameState::onPause)
+		{
+			_gameState = GameState::inProcess;
+		}
+		else {
+			GameObjectContainer& cont = GameObjectContainer::getInstance();
+			IPoint mouse_pos = Core::mainInput.GetMousePos();
+			cont.PushProjectile(cannonPos, FPoint(mouse_pos));
+		}
+		
 	}
 	//if (Core::mainInput.GetMouseRightButton())
 	//{

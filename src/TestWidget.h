@@ -1,4 +1,11 @@
 #pragma once
+#include "GameObjectContainer.h"
+
+
+enum GameState {
+	inProcess,
+	onPause
+};
 
 ///
 /// Виджет - основной визуальный элемент на экране.
@@ -20,18 +27,22 @@ public:
 
 private:
 	void Init();
+	void drawGameObject(const GameObject& go, bool rotate);
 
 private:
-	IRect wsize;
-	//float _timer;
+	IRect _sceneRect;
+
+	GameState _gameState;
+	float _timer; // Тикает к нулю.
 	//
 	//float _scale;
 	//float _angle;
 	//
-	//Render::Texture* _tex1;
+	Render::Texture* _background;
 	//Render::Texture* _tex2;
 	//int _curTex;
 
-//	EffectsContainer _effCont;
+	EffectsContainer _effCont;
+	EffectsDelegate _effDel;
 //	ParticleEffectPtr _eff;
 };

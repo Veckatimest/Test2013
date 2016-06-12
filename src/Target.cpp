@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Target.h"
 
-Target::Target(FPoint startPos, FPoint startSpeed, float radius) : GameObject(startPos, startSpeed, radius) { }
+Target::Target(FPoint startPos, FPoint startSpeed, float objectRadius, EffectsDelegate* p_eff_c) : GameObject(startPos, startSpeed, objectRadius, p_eff_c) { }
 
 /// Стены все прямые, так что усложнять не станем
 /// если normal.x = -1, значит столкнулись с правой стенкой
