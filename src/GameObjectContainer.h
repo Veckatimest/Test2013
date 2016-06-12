@@ -1,7 +1,9 @@
 #pragma once
+#include "DrawCommand.h"
 #include "GameObject.h"
 #include "Target.h"
 #include "Projectile.h"
+
 
 struct EffectTask
 {
@@ -17,7 +19,9 @@ public:
 	void PushGameObject(FPoint position, FPoint speed, float radius);
 	void PushRandGameObject();
 	void PushProjectile(FPoint position, FPoint destination);
-	void Update(float dt);
+	void Update(float dt, FPoint mousePos);
+	void enableMagnet();
+	void disableMagnet();
 	
 	void SetProjectileSpeed(float inputProjectileSpeed);
 	void SetTargetCount(int count);
@@ -29,6 +33,8 @@ public:
 	void SetProjectileDestroyEffect(std::string effName);
 	void SetSceneBounds(IRect rect);
 	void SetEffectsDelegate(EffectsDelegate* effdel);
+	void RemoveAllObjects();
+	std::deque<DrawCommand> & GetDrawQueue();
 
 	const std::list<Target>& GetTargets();
 	const std::list<Projectile>& GetProjectiles();
@@ -51,8 +57,9 @@ private:
 	std::string _projectileDestrEff;
 	std::string _projectileMoveEff;
 
-	// Вот бы иметь умные указатели и создать коллекцию типа GameObject
 	std::list<Target> _targetList;
 	std::list<Projectile> _projectileList;
+	std::deque<DrawCommand> _drawQueue;
+
 	EffectsDelegate* _effDel;
 };

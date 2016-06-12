@@ -1,4 +1,5 @@
 #pragma once
+#include "DrawCommand.h"
 #include "EffectsDelegate.h"
 
 class GameObject
@@ -6,7 +7,8 @@ class GameObject
 public:
 	GameObject(FPoint startPos);
 	GameObject(FPoint startPos, FPoint startSpeed, float objectRadius, EffectsDelegate* p_eff_c);
-	virtual void Update(float dt);
+	virtual void Update(float dt, FPoint mousePos);
+	virtual DrawCommand Draw();
 	bool isCollided(GameObject& other) const;
 	bool isPointInside(FPoint point) const;
 	FPoint getPosition() const;
@@ -27,11 +29,11 @@ protected:
 	FPoint _position; // Положение объекта
 	FPoint _speed; // Векторная скорость
 	float _radius; // Радиус круглого объекта (а мы делаем круглые объекты)
+	Render::Texture* _texture;
 	EffectsDelegate* p_effDel;
 
 private:
 	/// Отображение
-	Render::Texture* _texture;
 	std::string _destroyEffectName;
 };
 

@@ -3,7 +3,7 @@
 
 
 enum GameState {
-	inProcess,
+	inProgress,
 	onPause
 };
 
@@ -27,10 +27,14 @@ public:
 
 private:
 	void Init();
-	void drawGameObject(const GameObject& go, bool rotate);
+	void renderDrawCommand(const DrawCommand& command);
+	void restart();
 
 private:
+	std::string _gameMessage;
+
 	IRect _sceneRect;
+	FPoint _cannonPos;
 
 	GameState _gameState;
 	float _timer; // Тикает к нулю.

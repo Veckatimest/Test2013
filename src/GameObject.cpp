@@ -19,9 +19,14 @@ GameObject::GameObject(FPoint startPos, FPoint startSpeed, float objectRadius, E
 }
 
 /// вроде как мы живем в системе у которой координаты начинаются с левого нижнего угла, а не левого верхнего
-void GameObject::Update(float dt)
+void GameObject::Update(float dt, FPoint mousePos)
 {
 	_position += _speed * dt;
+}
+
+DrawCommand GameObject::Draw()
+{
+	return DrawCommand(_texture, _radius * 2, 0, _position);
 }
 
 /// в теории-то разные могут быть последствия

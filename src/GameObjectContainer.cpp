@@ -63,6 +63,12 @@ void GameObjectContainer::SetProjectileDestroyEffect(std::string effName)
 	_projectileDestrEff = effName;
 }
 
+void GameObjectContainer::RemoveAllObjects()
+{
+	_projectileList.clear();
+	_targetList.clear();
+}
+
 
 void GameObjectContainer::PushGameObject(FPoint position, FPoint speed, float radius)
 {
@@ -105,12 +111,12 @@ void GameObjectContainer::PushProjectile(FPoint position, FPoint destination)
 /// Так-то можно было бы наверное устроить тут разбиение сцены на прямоугольники
 /// Но так имеет смысл делать если надо детектировать много столковений со многими компонентами.
 /// Все эффекты запускаются прямо здесь для экономности.
-void GameObjectContainer::Update(float dt)
+void GameObjectContainer::Update(float dt, FPoint mousePos)
 {
 	//Подвигаем все снаряды и проверим стены
 	for (std::list<Projectile>::iterator projectile = _projectileList.begin(); projectile != _projectileList.end(); ++projectile)
 	{
-		projectile->Update(dt);
+		projectile->Update(dt, mousePos);
 		checkWallCollision(*projectile);
 	}
 	
@@ -118,7 +124,7 @@ void GameObjectContainer::Update(float dt)
 	std::list<Target>::iterator targetIt = _targetList.begin();
 	while (targetIt != _targetList.end())
 	{
-		targetIt->Update(dt);
+		targetIt->Update(dt, mousePos);
 		checkWallCollision(*targetIt);
 		std::list<Projectile>::iterator projIt = _projectileList.begin();
 		while (projIt != _projectileList.end())
@@ -136,6 +142,30 @@ void GameObjectContainer::Update(float dt)
 	}
 	_projectileList.remove_if([](GameObject& i){return !i.isAlive(); });
 	_targetList.remove_if([](GameObject& i){return !i.isAlive(); });
+}
+
+/// И пополняет очередь, и возвращает на нее ссылку.
+std::deque<DrawCommand>& GameObjectContainer::GetDrawQueue()
+{
+	for (std::list<Target>::iterator target = _targetList.begin(); target != _targetList.end(); ++target)
+	{
+		_drawQueue.push_back(target->Draw());
+	}
+	for (std::list<Projectile>::iterator projectile = _projectileList.begin(); projectile != _projectileList.end(); ++projectile)
+	{
+		_drawQueue.push_back(projectile->Draw());
+	}
+	return _drawQueue;
+}
+
+void GameObjectContainer::enableMagnet()
+{
+	for (std::list<Projectile>::iterator it = _projectileList.begin(); it != _projectileList.end(); ++it){it->enableMagnet();}
+}
+
+void GameObjectContainer::disableMagnet()
+{
+	for (std::list<Projectile>::iterator it = _projectileList.begin(); it != _projectileList.end(); ++it){ it->enableMagnet(); }
 }
 
 void GameObjectContainer::checkWallCollision(GameObject& g_object)

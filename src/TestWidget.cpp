@@ -10,6 +10,7 @@ TestWidget::TestWidget(const std::string& name, rapidxml::xml_node<>* elem)
 	, _effCont()
 	, _effDel(_effCont)
 	, _gameState(GameState::onPause)
+	, _cannonPos(_sceneRect.width / 2, 30)
 	//, _curTex(0)
 	//, _timer(0)
 	//, _angle(0)
@@ -19,8 +20,20 @@ TestWidget::TestWidget(const std::string& name, rapidxml::xml_node<>* elem)
 	Init();
 }
 
+void TestWidget::restart()
+{
+	GameObjectContainer& cont = GameObjectContainer::getInstance();
+	SettingsObj& settings = SettingsObj::getInstance();
+	_timer = settings.getTime();
+	for (int i = 0; i < settings.getCount(); i++)
+	{
+		cont.PushRandGameObject();
+	}
+}
+
 void TestWidget::Init()
 {
+	_gameMessage = "{font size=18}You can start a game by pressing \n left button. Use mouse right button \n  to correct missle direction{}";
 	Render::Texture* tex1 = Core::resourceManager.Get<Render::Texture>("btnStart_Text");
 	Render::Texture* fighter = Core::resourceManager.Get<Render::Texture>("Fighter");
 	Render::Texture* rocket = Core::resourceManager.Get<Render::Texture>("Rocket");
@@ -35,33 +48,23 @@ void TestWidget::Init()
 	cont.SetProjectileDestroyEffect("Explode");
 	cont.SetSceneBounds(_sceneRect);
 	cont.SetProjectileSpeed(settings.getSpeed());
-	_timer = settings.getTime();
-	
-	for (int i = 0; i < settings.getCount(); i++)
-	{
-		cont.PushRandGameObject();
-	}
 }
 
-void TestWidget::drawGameObject(const GameObject& go, bool rotate)
+void TestWidget::renderDrawCommand(const DrawCommand& command)
 {
 	Render::device.PushMatrix();
-	FPoint pos = go.getPosition();
-	Render::Texture* curtex = go.getTexture();
+	FPoint pos = command.position;
+	Render::Texture* curtex = command.tex;
 	Render::device.MatrixTranslate(pos.x, pos.y, 0);
 	IRect texRect = curtex->getBitmapRect();
 	FRect rect(texRect);
 	FRect uv(0, 1, 0, 1);
-	float scale = 2 * go.getRadius() / rect.Width();
+	float scale = command.size / rect.Width();
 	curtex->TranslateUV(rect, uv);
 	Render::device.MatrixScale(scale);
-	if (rotate)
-	{
-		FPoint dir = go.getSpeed().Normalized();
-		float angle = dir.GetAngle() * radToDeg;
-		Render::device.MatrixRotate(math::Vector3(0, 0, 1.0f), angle + 90);
-	}
-		
+	if (command.angle != 0.0f)
+		Render::device.MatrixRotate(math::Vector3(0, 0, 1.0f), command.angle*radToDeg);
+
 	Render::device.MatrixTranslate(-texRect.width * 0.5f, -texRect.height * 0.5f, 0.0f);
 	curtex->Bind();
 
@@ -72,25 +75,16 @@ void TestWidget::drawGameObject(const GameObject& go, bool rotate)
 
 void TestWidget::Draw()
 {
-	//
-	// Получаем текущее положение курсора мыши.
-	//
-	IPoint mouse_pos = Core::mainInput.GetMousePos();
-
 	GameObjectContainer& cont = GameObjectContainer::getInstance();
 	_background->Draw(IPoint(0, 0));
 
-	if (_gameState == GameState::inProcess)
+	if (_gameState == GameState::inProgress)
 	{
-		const std::list<Target>& targets = cont.GetTargets();
-		for (std::list<Target>::const_iterator tgIt = targets.begin(); tgIt != targets.end(); ++tgIt)
+		std::deque<DrawCommand>& draws = cont.GetDrawQueue();
+		while (!draws.empty())
 		{
-			drawGameObject(*tgIt, false);
-		}
-		const std::list<Projectile>& bullets = cont.GetProjectiles();
-		for (std::list<Projectile>::const_iterator pjIt = bullets.begin(); pjIt != bullets.end(); ++pjIt)
-		{
-			drawGameObject(*pjIt, true);
+			renderDrawCommand(draws.front());
+			draws.pop_front();
 		}
 	}
 	else
@@ -106,118 +100,63 @@ void TestWidget::Draw()
 		Render::EndColor();
 		Render::BindFont("arial");
 		Render::BeginColor(Color(0, 153, 51, 255));
-		Render::PrintString(_sceneRect.width / 2, _sceneRect.height / 2 + 25, "{font size=22}You can start a game \n by pressing left button {}", 1.f, CenterAlign);
+		Render::PrintString(_sceneRect.width / 2, _sceneRect.height / 2 + 25, _gameMessage, 1.f, CenterAlign);
 		Render::EndColor();
 		Render::device.SetTexturing(true);
 	}
 	
-
-	Render::device.SetTexturing(false);
-
-	//
-	// Метод BeginColor() проталкивает в стек текущий цвет вершин и устанавливает новый.
-	//
-	Render::BeginColor(Color(255, 128, 0, 255));
-
-	//
-	// Метод DrawRect() выводит в графическое устройство квадратный спрайт, состоящий их двух
-	// примитивов - треугольников, используя при этом текущий цвет для вершин и привязанную (binded) текстуру,
-	// если разрешено текстурирование.
-	//
-	// Перед вызовом DrawRect() должен быть вызов Texture::Bind(), либо SetTexturing(false),
-	// иначе визуальный результат будет непредсказуемым.
-	//
-	Render::DrawRect(924, 0, 100, 100);
-
-	//
-	// Метод EndColor() снимает со стека текущий цвет вершин, восстанавливая прежний.
-	//
-	Render::EndColor();
-
-	//
-	// Опять включаем текстурирование.
-	//
-	Render::device.SetTexturing(true);
-
-	//
-	// Рисуем все эффекты, которые добавили в контейнер (Update() для контейнера вызывать не нужно).
-	//
 	_effCont.Draw();
 	//_effCont.Draw();
 
-	Render::BindFont("arial");
-	Render::PrintString(924 + 100 / 2, 35, utils::lexical_cast(mouse_pos.x) + ", " + utils::lexical_cast(mouse_pos.y), 1.f, CenterAlign);
+	//Render::BindFont("arial");
+	//Render::PrintString(924 + 100 / 2, 35, utils::lexical_cast(mouse_pos.x) + ", " + utils::lexical_cast(mouse_pos.y), 1.f, CenterAlign);
 
 }
 
 void TestWidget::Update(float dt)
 {
-
-	if (_gameState == GameState::inProcess)
+	IPoint mouse_pos = Core::mainInput.GetMousePos();
+	if (_gameState == GameState::inProgress)
 	{
 		// Обновим контейнер с эффектами
 		_timer -= dt;
 		GameObjectContainer& cont = GameObjectContainer::getInstance();
 		_effCont.Update(dt);
-		cont.Update(dt);
-		if (_timer < 0)
+		cont.Update(dt, mouse_pos);
+		if ((_timer < 0) || cont.GetTargets().empty())
 		{
+			cont.RemoveAllObjects();
+			_effCont.KillAllEffects();
 			_gameState = GameState::onPause;
+			if (_timer < 0)
+				_gameMessage = "{font size=18}You've lost! Restart a game by \n pressing left button. Use mouse right button \n to correct missle direction{}";
+			else
+				_gameMessage = "{font size=18}You won! Restart a game by pressing \n left button. Use mouse right button \n to correct missle direction{}";
 		}
 	}
-	
 }
 
 bool TestWidget::MouseDown(const IPoint &mouse_pos)
 {
-	FPoint cannonPos(_sceneRect.width / 2, 30);
+	GameObjectContainer& cont = GameObjectContainer::getInstance();
 	if (Core::mainInput.GetMouseLeftButton())
 	{
 		if (_gameState == GameState::onPause)
 		{
-			_gameState = GameState::inProcess;
+			restart();
+			_gameState = GameState::inProgress;
 		}
 		else {
-			GameObjectContainer& cont = GameObjectContainer::getInstance();
 			IPoint mouse_pos = Core::mainInput.GetMousePos();
-			cont.PushProjectile(cannonPos, FPoint(mouse_pos));
+			cont.PushProjectile(_cannonPos, FPoint(mouse_pos));
 		}
-		
 	}
-	//if (Core::mainInput.GetMouseRightButton())
-	//{
-	//	//
-	//	// При нажатии на правую кнопку мыши, создаём эффект шлейфа за мышкой.
-	//	//
-	//	_eff = _effCont.AddEffect("Iskra");
-	//	_eff->posX = mouse_pos.x + 0.f;
-	//	_eff->posY = mouse_pos.y + 0.f;
-	//	_eff->Reset();
-	//	
-	//	//
-	//	// И изменяем угол наклона текстуры.
-	//	//
-	//	_angle += 25;
-	//	while (_angle > 360)
-	//	{
-	//		_angle -= 360;
-	//	}
-	//}
-	//else
-	//{
-	//	//
-	//	// При нажатии на левую кнопку мыши, создаём временный эффект, который завершится сам.
-	//	//
-	//	ParticleEffectPtr eff = _effCont.AddEffect("FindItem2");
-	//	eff->posX = mouse_pos.x + 0.f;
-	//	eff->posY = mouse_pos.y + 0.f;
-	//	eff->Reset();
+	
+	if (Core::mainInput.GetMouseRightButton())
+	{
+		cont.enableMagnet();
+	}
 
-	//	//
-	//	// Изменяем значение с 0 на 1 и наоборот.
-	//	//
-	//	_curTex = 1 - _curTex;
-	//}
 	return false;
 }
 
@@ -235,14 +174,8 @@ void TestWidget::MouseMove(const IPoint &mouse_pos)
 
 void TestWidget::MouseUp(const IPoint &mouse_pos)
 {
-	//if (_eff)
-	//{
-	//	//
-	//	// Если эффект создан, то при отпускании мыши завершаем его.
-	//	//
-	//	_eff->Finish();
-	//	_eff = NULL;
-	//}
+	GameObjectContainer& cont = GameObjectContainer::getInstance();
+	cont.disableMagnet();
 }
 
 void TestWidget::AcceptMessage(const Message& message)
