@@ -160,12 +160,12 @@ std::deque<DrawCommand>& GameObjectContainer::GetDrawQueue()
 
 void GameObjectContainer::enableMagnet()
 {
-	for (std::list<Projectile>::iterator it = _projectileList.begin(); it != _projectileList.end(); ++it){it->enableMagnet();}
+	for (std::list<Projectile>::iterator it = _projectileList.begin(); it != _projectileList.end(); ++it){ it->enableMagnet(); }
 }
 
 void GameObjectContainer::disableMagnet()
 {
-	for (std::list<Projectile>::iterator it = _projectileList.begin(); it != _projectileList.end(); ++it){ it->enableMagnet(); }
+	for (std::list<Projectile>::iterator it = _projectileList.begin(); it != _projectileList.end(); ++it){ it->disableMagnet(); }
 }
 
 void GameObjectContainer::checkWallCollision(GameObject& g_object)

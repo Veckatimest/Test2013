@@ -23,12 +23,30 @@ void Projectile::getHit()
 
 void Projectile::Update(float dt, FPoint mousePos)
 {
+	// max angle per second
+	const float maxAngle = math::PI * 0.5f;
 	GameObject::Update(dt, mousePos);
 	if (_moveEffectPtr){
 		_moveEffectPtr->SetPos(_position);
 	}
 	if (_isMagnet)
-		_speed += 200.0f * dt * (mousePos - _position).Normalized();
+	{
+		float realMax = maxAngle * dt;
+		//_speed += 200.0f * dt * (mousePos - _position).Normalized();
+		float currangle = _speed.GetAngle();
+		float needangle = (mousePos - _position).GetAngle();
+		float angleDiff = needangle - currangle;
+		if (angleDiff > math::PI) angleDiff -= 2 * math::PI;
+		if (angleDiff < -math::PI) angleDiff += 2 * math::PI;
+
+		if (math::abs(angleDiff) < realMax)
+			_speed.Rotate(angleDiff);
+		else if (angleDiff > 0)
+			_speed.Rotate(realMax);
+		else 
+			_speed.Rotate(-realMax);
+	}
+		
 }
 
 DrawCommand Projectile::Draw()
