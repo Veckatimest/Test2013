@@ -83,9 +83,9 @@ void GameObjectContainer::PushRandGameObject()
 	//position
 	float random_var = (float)std::rand() / (float)RAND_MAX;
 	FPoint startPos, speed;
-	startPos.x = fair_width * random_var + _targetRadius;
+	startPos.x = _sceneRect.x + fair_width * random_var + _targetRadius;
 	random_var = (float)std::rand() / (float)RAND_MAX;
-	startPos.y = fair_height * random_var + _targetRadius;
+	startPos.y = _sceneRect.y + fair_height * random_var + _targetRadius;
 	//speed
 	random_var = (float)std::rand() / (float)RAND_MAX;
 	speed.x = random_var * _maxGameObjectSpeed - _maxGameObjectSpeed / 2;

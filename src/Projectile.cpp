@@ -8,7 +8,8 @@ Projectile::Projectile(FPoint startPos, FPoint startSpeed, float objectRadius, E
 
 void Projectile::hitWall(FPoint normal)
 {
-	getHit();
+	if (!(_speed.y > 0 && normal.y > 0))
+		getHit();
 }
 
 void Projectile::getHit()

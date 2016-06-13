@@ -29,15 +29,21 @@ private:
 	void Init();
 	void renderDrawCommand(const DrawCommand& command);
 	void restart();
+	void drawStatusScreen();
+	void drawBottomLine();
 
 private:
 	std::string _gameMessage;
 
 	IRect _sceneRect;
+	IRect _playRect;
+	IRect _lineRect;
+
 	FPoint _cannonPos;
 
 	GameState _gameState;
 	float _timer; // Тикает к нулю.
+	int _shotCounter;
 	//
 	//float _scale;
 	//float _angle;
