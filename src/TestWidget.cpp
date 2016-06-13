@@ -4,54 +4,75 @@
 
 const float radToDeg = (180.0f / math::PI);
 
+TargetFactoryPtr TestWidget::makeTargetFact(EffectsDelegatePtr effDelPtr)
+{
+	Render::Texture* fighter1 = Core::resourceManager.Get<Render::Texture>("Fighter1");
+	Render::Texture* fighter2 = Core::resourceManager.Get<Render::Texture>("Fighter2");
+	Render::Texture* fighter3 = Core::resourceManager.Get<Render::Texture>("Fighter3");
+	Render::Texture* fighter4 = Core::resourceManager.Get<Render::Texture>("Fighter4");
+	Render::Texture* fighter5 = Core::resourceManager.Get<Render::Texture>("Fighter5");
+	Render::Texture* fighter6 = Core::resourceManager.Get<Render::Texture>("Fighter6");
+	TargetFactoryPtr targetFactoryPtr(new TargetFactory());
+	targetFactoryPtr->SetEffectsDel(effDelPtr);
+	targetFactoryPtr->AddTargetDestroyEffect("Explode");
+	targetFactoryPtr->AddTargetTexture(fighter1);
+	targetFactoryPtr->AddTargetTexture(fighter2);
+	targetFactoryPtr->AddTargetTexture(fighter3);
+	return targetFactoryPtr;
+}
+
+ProjectileFactoryPtr TestWidget::makeProjFact(EffectsDelegatePtr effDelPtr)
+{
+	SettingsObj& settings = SettingsObj::getInstance();
+	Render::Texture* rocket = Core::resourceManager.Get<Render::Texture>("Rocket");
+	ProjectileFactoryPtr projFactPtr(new ProjectileFactory() );
+	projFactPtr->SetEffectsDel(effDelPtr);
+	projFactPtr->AddProjectileTexture(rocket);
+	projFactPtr->SetStartPosition(_cannonPos);
+	projFactPtr->SetProjectileMoveEffect("Engine");
+	projFactPtr->SetProjectileDestroyEffect("Explode");
+	projFactPtr->SetProjectileSpeed(settings.getSpeed());
+	return projFactPtr;
+}
+
 TestWidget::TestWidget(const std::string& name, rapidxml::xml_node<>* elem)
 	: Widget(name)
-	, _sceneRect(0, 0, Render::device.Width(), Render::device.Height())
-	, _playRect(0, 35, Render::device.Width(), Render::device.Height())
-	, _lineRect(0, 0, Render::device.Width(), 35)
 	, _effCont()
-	, _effDel(_effCont)
-	, _gameState(GameState::onPause)
+	, _sceneRect(0, 0, Render::device.Width(), Render::device.Height())
 	, _cannonPos(_sceneRect.width / 2, 45)
-	//, _curTex(0)
+	, _lineRect(0, Render::device.Height() - 35, Render::device.Width(), 35)
+	, _playRect(0, 0, Render::device.Width(), Render::device.Height() - 35)
+	, _gameCont()
+	, _gameState(GameState::onPause)
 	, _timer(0)
 	, _shotCounter(0)
-	//, _angle(0)
-	//, _eff(NULL)
-	//, _scale(0.f)
 {
 	Init();
 }
 
 void TestWidget::restart()
 {
-	GameObjectContainer& cont = GameObjectContainer::getInstance();
 	SettingsObj& settings = SettingsObj::getInstance();
 	_timer = settings.getTime();
 	_shotCounter = 0;
 	for (int i = 0; i < settings.getCount(); i++)
 	{
-		cont.PushRandGameObject();
+		_gameCont.PushRandTarget();
 	}
 }
 
 void TestWidget::Init()
 {
+	EffectsDelegatePtr effDelPtr(new EffectsDelegate(_effCont));
+	TargetFactoryPtr targFact = makeTargetFact(effDelPtr);
+	ProjectileFactoryPtr projFact = makeProjFact(effDelPtr);
+	_gameCont.SetSceneBounds(_playRect);
+	_gameCont.SetTargetFactory(targFact);
+	_gameCont.SetProjectileFactory(projFact);
 	_gameMessage = "{font size=18}You can start a game by pressing \n left button. Use mouse right button \n  to correct missle direction{}";
-	Render::Texture* tex1 = Core::resourceManager.Get<Render::Texture>("btnStart_Text");
-	Render::Texture* fighter = Core::resourceManager.Get<Render::Texture>("Fighter");
-	Render::Texture* rocket = Core::resourceManager.Get<Render::Texture>("Rocket");
 	_background = Core::resourceManager.Get<Render::Texture>("Background");
-	GameObjectContainer& cont = GameObjectContainer::getInstance();
+	_cannonTex = Core::resourceManager.Get<Render::Texture>("FighterMe");
 	SettingsObj& settings = SettingsObj::getInstance();
-	cont.SetEffectsDelegate(&_effDel);
-	cont.SetTargetTexture(fighter);
-	cont.SetTargetDestroyEffect("Explode");
-	cont.SetProjectileTexture(rocket);
-	cont.SetProjectileMoveEffect("Engine");
-	cont.SetProjectileDestroyEffect("Explode");
-	cont.SetSceneBounds(_playRect);
-	cont.SetProjectileSpeed(settings.getSpeed());
 }
 
 void TestWidget::drawStatusScreen()
@@ -80,10 +101,25 @@ void TestWidget::drawBottomLine()
 	Render::EndColor();
 	Render::BindFont("arial");
 	Render::BeginColor(Color(153, 204, 255, 255));
-	Render::PrintString(20, 25, std::string("{font size=18}You've got ") + utils::lexical_cast((int)_timer) + std::string(" s {}"), 1.f, LeftAlign);//_shotCounter
-	Render::PrintString(400, 25, std::string("{font size=18}You've fired ") + utils::lexical_cast(_shotCounter) + std::string(" missles {}"), 1.f, LeftAlign);
+	
+	Render::PrintString(_lineRect.x + 20, _lineRect.y + 25, std::string("{font size=18}You've got ") + utils::lexical_cast((int)_timer) + std::string(" s {}"), 1.f, LeftAlign);//_shotCounter
+	Render::PrintString(_lineRect.x + 400, _lineRect.y + 25, std::string("{font size=18}You've fired ") + utils::lexical_cast(_shotCounter) + std::string(" missles {}"), 1.f, LeftAlign);
 	Render::EndColor();
 	Render::device.SetTexturing(true);
+}
+
+void TestWidget::drawCannon(IPoint mousePos)
+{
+	float angle = (FPoint(mousePos) - _cannonPos).GetAngle();
+	Render::device.PushMatrix();
+	Render::device.MatrixTranslate(_cannonPos.x, _cannonPos.y, 0);
+	IRect texRect = _cannonTex->getBitmapRect();
+	Render::device.MatrixScale(0.7f);
+	Render::device.MatrixRotate(math::Vector3(0, 0, 1.0f), angle*radToDeg);
+	Render::device.MatrixTranslate(-texRect.width * 0.2f, -texRect.height * 0.5f, 0.0f);
+	
+	_cannonTex->Draw();
+	Render::device.PopMatrix();
 }
 
 void TestWidget::renderDrawCommand(const DrawCommand& command)
@@ -95,15 +131,13 @@ void TestWidget::renderDrawCommand(const DrawCommand& command)
 	IRect texRect = curtex->getBitmapRect();
 	FRect rect(texRect);
 	//FRect uv(0, 1, 0, 1);
-	float scale = command.size / rect.Width();
+	float scale = command.size / rect.Height();
 	//curtex->TranslateUV(rect, uv);
 	Render::device.MatrixScale(scale);
 	if (command.angle != 0.0f)
 		Render::device.MatrixRotate(math::Vector3(0, 0, 1.0f), command.angle*radToDeg);
-
 	Render::device.MatrixTranslate(-texRect.width * 0.5f, -texRect.height * 0.5f, 0.0f);
 	//curtex->Bind();
-
 	//Render::DrawRect(rect, uv);
 	curtex->Draw();
 	Render::device.PopMatrix();
@@ -111,28 +145,23 @@ void TestWidget::renderDrawCommand(const DrawCommand& command)
 
 void TestWidget::Draw()
 {
-	GameObjectContainer& cont = GameObjectContainer::getInstance();
+	IPoint mouse_pos = Core::mainInput.GetMousePos();
 	_background->Draw(IPoint(0, 0));
-	drawBottomLine();
 
 	if (_gameState == GameState::inProgress)
 	{
-		std::deque<DrawCommand>& draws = cont.GetDrawQueue();
+		std::deque<DrawCommand>& draws = _gameCont.GetDrawQueue();
 		while (!draws.empty())
 		{
 			renderDrawCommand(draws.front());
 			draws.pop_front();
 		}
+		drawCannon(mouse_pos);
+		drawBottomLine();
 	}
 	else
 		drawStatusScreen();
-	
 	_effCont.Draw();
-	//_effCont.Draw();
-
-	//Render::BindFont("arial");
-	//Render::PrintString(924 + 100 / 2, 35, utils::lexical_cast(mouse_pos.x) + ", " + utils::lexical_cast(mouse_pos.y), 1.f, CenterAlign);
-
 }
 
 void TestWidget::Update(float dt)
@@ -142,12 +171,11 @@ void TestWidget::Update(float dt)
 	{
 		// Обновим контейнер с эффектами
 		_timer -= dt;
-		GameObjectContainer& cont = GameObjectContainer::getInstance();
 		_effCont.Update(dt);
-		cont.Update(dt, mouse_pos);
-		if ((_timer < 0) || cont.GetTargets().empty())
+		_gameCont.Update(dt, mouse_pos);
+		if ((_timer < 0) || _gameCont.GetTargets().empty())
 		{
-			cont.RemoveAllObjects();
+			_gameCont.RemoveAllObjects();
 			_effCont.KillAllEffects();
 			_gameState = GameState::onPause;
 			if (_timer < 0)
@@ -166,7 +194,6 @@ void TestWidget::Update(float dt)
 
 bool TestWidget::MouseDown(const IPoint &mouse_pos)
 {
-	GameObjectContainer& cont = GameObjectContainer::getInstance();
 	if (Core::mainInput.GetMouseLeftButton())
 	{
 		if (_gameState == GameState::onPause)
@@ -176,14 +203,15 @@ bool TestWidget::MouseDown(const IPoint &mouse_pos)
 		}
 		else {
 			IPoint mouse_pos = Core::mainInput.GetMousePos();
-			cont.PushProjectile(_cannonPos, FPoint(mouse_pos));
+			_gameCont.PushProjectile(FPoint(mouse_pos));
+			int soundId = MM::manager.PlaySample("missile");
 			_shotCounter++;
 		}
 	}
 	
 	if (Core::mainInput.GetMouseRightButton())
 	{
-		cont.enableMagnet();
+		_gameCont.enableMagnet();
 	}
 
 	return false;
@@ -203,8 +231,7 @@ void TestWidget::MouseMove(const IPoint &mouse_pos)
 
 void TestWidget::MouseUp(const IPoint &mouse_pos)
 {
-	GameObjectContainer& cont = GameObjectContainer::getInstance();
-	cont.disableMagnet();
+	_gameCont.disableMagnet();
 }
 
 void TestWidget::AcceptMessage(const Message& message)

@@ -9,7 +9,7 @@ GameObject::GameObject(FPoint startPos)
 	_alive = true;
 }
 
-GameObject::GameObject(FPoint startPos, FPoint startSpeed, float objectRadius, EffectsDelegate* p_eff_c)
+GameObject::GameObject(FPoint startPos, FPoint startSpeed, float objectRadius, EffectsDelegatePtr p_eff_c)
 {
 	_position = startPos;
 	_speed = startSpeed;

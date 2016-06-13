@@ -6,7 +6,7 @@ class GameObject
 {
 public:
 	GameObject(FPoint startPos);
-	GameObject(FPoint startPos, FPoint startSpeed, float objectRadius, EffectsDelegate* p_eff_c);
+	GameObject(FPoint startPos, FPoint startSpeed, float objectRadius, EffectsDelegatePtr p_eff_c);
 	virtual void Update(float dt, FPoint mousePos);
 	virtual DrawCommand Draw();
 	bool isCollided(GameObject& other) const;
@@ -30,7 +30,7 @@ protected:
 	FPoint _speed; // Векторная скорость
 	float _radius; // Радиус круглого объекта (а мы делаем круглые объекты)
 	Render::Texture* _texture;
-	EffectsDelegate* p_effDel;
+	EffectsDelegatePtr p_effDel;
 
 private:
 	/// Отображение

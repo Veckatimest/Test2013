@@ -31,28 +31,25 @@ private:
 	void restart();
 	void drawStatusScreen();
 	void drawBottomLine();
+	void drawCannon(IPoint mousePos);
+	TargetFactoryPtr makeTargetFact(EffectsDelegatePtr effDelPtr);
+	ProjectileFactoryPtr makeProjFact(EffectsDelegatePtr effDelPtr);
 
 private:
-	std::string _gameMessage;
+	GameObjectContainer _gameCont;
+	EffectsContainer _effCont;
 
-	IRect _sceneRect;
-	IRect _playRect;
-	IRect _lineRect;
+	std::string _gameMessage;
+	IRect _sceneRect; // все окно
+	IRect _playRect; // зона полета игровых объектов
+	IRect _lineRect; // полоса статистики
 
 	FPoint _cannonPos;
+	Render::Texture* _cannonTex;
 
 	GameState _gameState;
 	float _timer; // Тикает к нулю.
 	int _shotCounter;
-	//
-	//float _scale;
-	//float _angle;
-	//
 	Render::Texture* _background;
-	//Render::Texture* _tex2;
-	//int _curTex;
 
-	EffectsContainer _effCont;
-	EffectsDelegate _effDel;
-//	ParticleEffectPtr _eff;
 };

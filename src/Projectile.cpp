@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Projectile.h"
 
-Projectile::Projectile(FPoint startPos, FPoint startSpeed, float objectRadius, EffectsDelegate* p_eff_c) : GameObject(startPos, startSpeed, objectRadius, p_eff_c), _isMagnet(false)
+Projectile::Projectile(FPoint startPos, FPoint startSpeed, float objectRadius, EffectsDelegatePtr p_eff_c) : GameObject(startPos, startSpeed, objectRadius, p_eff_c), _isMagnet(false)
 {
 
 }
