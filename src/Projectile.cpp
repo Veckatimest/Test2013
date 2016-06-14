@@ -2,13 +2,11 @@
 #include "Projectile.h"
 
 Projectile::Projectile(FPoint startPos, FPoint startSpeed, float objectRadius, EffectsDelegatePtr p_eff_c) : GameObject(startPos, startSpeed, objectRadius, p_eff_c), _isMagnet(false)
-{
-
-}
+{}
 
 void Projectile::hitWall(FPoint normal)
 {
-	if (!(_speed.y > 0 && normal.y > 0))
+	if (!(_speed.y > 0 && normal.y > 0)) // если ракета родилась ниже нижней границы, и летит вверх, то не взорвется
 		getHit();
 }
 

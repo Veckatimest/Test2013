@@ -10,14 +10,13 @@ SettingsObj& SettingsObj::getInstance()
 
 void SettingsObj::readFromFile(std::string path)
 {
+	if (!Core::fileSystem.FileExists(path)) return;
 	IO::InputStreamPtr istr = Core::fileSystem.OpenRead(path);
 	istr->Seek(0, IO::Origin::End);
 	size_t size = istr->Tell();
 	char* buffer = new char[size + 1];
 	istr->Seek(0, IO::Origin::Beginning);
 	istr->Read(buffer, size + 1);
-	istr.detach();
-	istr.~intrusive_ptr();
 	buffer[size] = '\0';
 	std::vector<std::string> strs;
 	boost::split(strs, buffer, boost::is_any_of("\t= \n\r"));
@@ -42,5 +41,4 @@ void SettingsObj::readFromFile(std::string path)
 			continue;
 		}
 	}
-	///std::vector<std::string>().swap(strs);
 }

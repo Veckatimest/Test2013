@@ -16,6 +16,7 @@ void ProjectileFactory::AddProjectileTexture(Render::Texture* tex)
 Projectile ProjectileFactory::AddProjectile(FPoint& destination)
 {
 	static int texIndex = 0;
+	if (_texCount == 0) throw "Нет текстур";
 	FPoint speedVect = (destination - _cannonPos).Normalized() * _projSpeed;
 	Projectile temp(_cannonPos, speedVect, 25, _effDel);
 	temp.setTexture(_textures[texIndex]);

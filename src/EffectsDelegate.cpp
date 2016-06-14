@@ -5,9 +5,18 @@ EffectsDelegate::EffectsDelegate(EffectsContainer& ec) : _ec(ec) {}
 
 ParticleEffectPtr EffectsDelegate::AddEffect(std::string effectName)
 {
-	ParticleEffectPtr res = _ec.AddEffect(effectName);
-	res->Reset();
-	return res;
+	try {
+		ParticleEffectPtr res = _ec.AddEffect(effectName);
+		res->Reset();
+		return res;
+	}
+	catch (...)
+	{
+		throw "Похоже, что эффект не загружен";
+		return nullptr;
+	}
+	
+	
 }
 
 void EffectsDelegate::RemoveEffect(ParticleEffectPtr& effectPtr)

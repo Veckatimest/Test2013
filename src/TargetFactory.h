@@ -19,5 +19,4 @@ private:
 	const float _targetRadius = 50.0f;
 };
 
-//typedef boost::shared_ptr<TargetFactory> TargetFactoryPtr;
 typedef boost::shared_ptr<TargetFactory> TargetFactoryPtr;

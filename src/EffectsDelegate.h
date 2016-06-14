@@ -1,7 +1,8 @@
 #pragma once
 
-/// класс, который предоставляет доступ к некоторым возможностям EffectContainer'а, но не ко всем
-/// как если бы EffectsContainer реализовал этот интерфейс. Назову это backward-ducktyping
+/// класс, который предоставляет доступ к возможностям EffectContainer'а, таким как
+/// добавить эффект и удалить эффект.
+/// Нужен затем, чтоб в игре был только один EffectsContainer, и при реализация геймОбжекта была неспособна его испортить.
 class EffectsDelegate {
 public:
 	EffectsDelegate(EffectsContainer& ec);
@@ -10,14 +11,5 @@ public:
 private:
 	EffectsContainer& _ec;
 };
-
-//inline void intrusive_ptr_add_ref(EffectsDelegate* x){
-//	++x->references;
-//}
-//
-//inline void intrusive_ptr_release(EffectsDelegate* x){
-//	if (--x->references == 0)
-//		delete x;
-//}
 
 typedef boost::shared_ptr<EffectsDelegate> EffectsDelegatePtr;

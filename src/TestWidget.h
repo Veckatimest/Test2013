@@ -44,8 +44,8 @@ private:
 	IRect _playRect; // зона полета игровых объектов
 	IRect _lineRect; // полоса статистики
 
-	FPoint _cannonPos;
-	Render::Texture* _cannonTex;
+	FPoint _cannonPos; // расположение пушки
+	Render::Texture* _cannonTex; // текстура пушки
 
 	GameState _gameState;
 	float _timer; // Тикает к нулю.

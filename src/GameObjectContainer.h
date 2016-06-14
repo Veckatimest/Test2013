@@ -24,7 +24,7 @@ public:
 
 	void PushRandTarget();
 	void PushProjectile(FPoint destination);
-	void RemoveAllObjects() { _targetList.empty(); _projectileList.empty(); }
+	void RemoveAllObjects() { _targetList.clear(); _projectileList.clear(); }
 
 	void Update(float dt, FPoint mousePos);
 	void enableMagnet();
@@ -34,7 +34,6 @@ public:
 	const std::list<Target>& GetTargets() { return _targetList; }
 	const std::list<Projectile>& GetProjectiles() { return _projectileList; }
 private:
-
 	void checkWallCollision(GameObject& g_object);
 	bool checkForDestroy(GameObject& g_object);
 

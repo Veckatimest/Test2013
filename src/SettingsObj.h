@@ -16,7 +16,7 @@ private:
 
 private:
 	int _count = 9;
-	int _speed = 100;
-	int _time = 70;
+	int _speed = 200;
+	int _time = 25;
 };
 

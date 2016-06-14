@@ -6,16 +6,6 @@
 
 #define MYAPPLICATION_NAME "Test"
 
-
-
-void getSettingsFromIniFile(std::string path, int &read, int &write)
-{
-	boost::property_tree::ptree pt;
-	boost::property_tree::ini_parser::read_ini(path + ".ini", pt);
-	read = pt.get<int>("Read");
-	write = std::stoi(pt.get<std::string>("Write"));
-}
-
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	std::srand(std::time_t(NULL));

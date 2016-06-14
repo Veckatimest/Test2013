@@ -69,7 +69,7 @@ void TestWidget::Init()
 	_gameCont.SetSceneBounds(_playRect);
 	_gameCont.SetTargetFactory(targFact);
 	_gameCont.SetProjectileFactory(projFact);
-	_gameMessage = "{font size=18}You can start a game by pressing \n left button. Use mouse right button \n  to correct missle direction{}";
+	_gameMessage = "{font size=24}You can start a game by pressing \n left button. Use mouse right button \n  to correct missle direction{}";
 	_background = Core::resourceManager.Get<Render::Texture>("Background");
 	_cannonTex = Core::resourceManager.Get<Render::Texture>("FighterMe");
 	SettingsObj& settings = SettingsObj::getInstance();
@@ -81,13 +81,13 @@ void TestWidget::drawStatusScreen()
 	Render::BeginColor(Color(0, 0, 0, 180));
 	Render::DrawRect(_sceneRect);
 	Render::EndColor();
-	Render::BeginColor(Color(51, 204, 255, 255));
+	/*Render::BeginColor(Color(51, 204, 255, 255));
 	int centerW = 400;
 	int centerH = 300;
 	Render::DrawRect(IRect(_sceneRect.width / 2 - centerW / 2, _sceneRect.height / 2 - centerH / 2, centerW, centerH));
-	Render::EndColor();
+	Render::EndColor();*/
 	Render::BindFont("arial");
-	Render::BeginColor(Color(0, 153, 51, 255));
+	Render::BeginColor(Color(255, 179, 26, 255));
 	Render::PrintString(_sceneRect.width / 2, _sceneRect.height / 2 + 25, _gameMessage, 1.f, CenterAlign);
 	Render::EndColor();
 	Render::device.SetTexturing(true);
@@ -179,12 +179,12 @@ void TestWidget::Update(float dt)
 			_effCont.KillAllEffects();
 			_gameState = GameState::onPause;
 			if (_timer < 0)
-				_gameMessage = "{font size=18}You've lost! Restart a game by \n pressing left button. Use mouse right button \n to correct missle direction{}";
+				_gameMessage = "{font size=18}You've lost! Restart a game by \n pressing left button. Use mouse right button \n to correct missles direction{}";
 			else
 			{
 				SettingsObj& settings = SettingsObj::getInstance();
 				int accuracy = math::round(100.0f * (float)settings.getCount() / (float)_shotCounter);
-				_gameMessage = "{font size=18}You won! Restart a game by pressing \n left button. Use mouse right button \n to correct missle direction{} \n\n Shot " \
+				_gameMessage = "{font size=18}You won! Restart a game by pressing \n left button. Use mouse right button \n to correct missles direction{} \n\n Shot " \
 					+ utils::lexical_cast(_shotCounter) + " missles. \n Your accuracy is " + utils::lexical_cast(accuracy);
 			}
 				
@@ -204,11 +204,10 @@ bool TestWidget::MouseDown(const IPoint &mouse_pos)
 		else {
 			IPoint mouse_pos = Core::mainInput.GetMousePos();
 			_gameCont.PushProjectile(FPoint(mouse_pos));
-			int soundId = MM::manager.PlaySample("missile");
 			_shotCounter++;
 		}
 	}
-	
+
 	if (Core::mainInput.GetMouseRightButton())
 	{
 		_gameCont.enableMagnet();

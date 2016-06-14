@@ -3,14 +3,9 @@
 #include "GameObject.h"
 
 
-GameObject::GameObject(FPoint startPos)
-{
-	_position = startPos;
-	_alive = true;
-}
-
 GameObject::GameObject(FPoint startPos, FPoint startSpeed, float objectRadius, EffectsDelegatePtr p_eff_c)
 {
+	if (!p_eff_c) "Контейнер эффектов не назначен";
 	_position = startPos;
 	_speed = startSpeed;
 	_radius = objectRadius;
@@ -38,27 +33,9 @@ void GameObject::getHit()
 	projEff->Reset();
 }
 
-FPoint GameObject::getPosition() const
-{
-	return _position;
-}
-
-FPoint GameObject::getSpeed() const
-{
-	return _speed;
-}
-
 bool GameObject::isCollided(GameObject& other) const
 {
 	if (_position.GetDistanceTo(other._position) < (_radius + other._radius))
-		return true;
-	else
-		return false;
-}
-
-bool GameObject::isPointInside(FPoint point) const
-{
-	if (_position.GetDistanceTo(point) < _radius)
 		return true;
 	else
 		return false;
@@ -69,13 +46,19 @@ bool GameObject::isAlive() const
 	return _alive;
 }
 
-float GameObject::getRadius() const
+IPoint GameObject::isInsideRect(IRect& bounds) const
 {
-	return _radius;
+	IPoint normal(0, 0);
+	if (_position.x - _radius < bounds.x) normal += IPoint(1, 0);
+	else if (_position.x + _radius > bounds.width) normal += IPoint(-1, 0);
+	if (_position.y - _radius < bounds.y) normal += IPoint(0, 1);
+	else if (_position.y + _radius > bounds.height) normal += IPoint(0, -1);
+	return normal;
 }
 
 void GameObject::setTexture(Render::Texture* texture)
 {
+	if (texture == NULL) throw "Пустая текстура";
 	_texture = texture;
 }
 

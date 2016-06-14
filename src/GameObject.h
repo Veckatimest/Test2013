@@ -5,15 +5,13 @@
 class GameObject
 {
 public:
-	GameObject(FPoint startPos);
 	GameObject(FPoint startPos, FPoint startSpeed, float objectRadius, EffectsDelegatePtr p_eff_c);
 	virtual void Update(float dt, FPoint mousePos);
 	virtual DrawCommand Draw();
-	bool isCollided(GameObject& other) const;
-	bool isPointInside(FPoint point) const;
-	FPoint getPosition() const;
-	FPoint getSpeed() const;
-	float getRadius() const;
+	bool isCollided(GameObject& other) const; // провер€ет, не пересекаютс€ ли игровые объекты
+	IPoint isInsideRect(IRect& bounds) const; // провер€ет, находитс€ ли весь объект внутри границ, если пересек границу, вернет нормаль к ней (дл€ столкновени€ со стенами)
+	FPoint getPosition() const { return _position; } // нигде не используютс€, но, € думаю они должны быть.
+	FPoint getSpeed() { return _speed; }
 	bool isAlive() const;
 	
 	virtual void hitWall(FPoint normal) = 0; // ¬ызываетс€ при столкновении со стеной, принимает вектор нормали к поверхности

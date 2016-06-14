@@ -12,11 +12,13 @@ _sceneRect(scenerect)
 {}
 
 void GameObjectContainer::PushRandTarget() {
+	if (!_targetFact) throw "Фабрика не установлена";
 	_targetList.push_back(_targetFact->AddRandomTarget(_sceneRect));
 }
 
 void GameObjectContainer::PushProjectile(FPoint destination)
 {
+	if (!_projectileFactory) throw "Фабрика не установлена";
 	_projectileList.push_back(_projectileFactory->AddProjectile(destination));
 }
 
@@ -47,13 +49,22 @@ void GameObjectContainer::Update(float dt, FPoint mousePos)
 				//projIt->Finalize();
 				break;
 			}
-			else ++projIt;
+			++projIt;
 		}
 		++targetIt;
 	}
 	// уберем лишние
-	_projectileList.remove_if([](GameObject& i){return !i.isAlive(); });
-	_targetList.remove_if([](GameObject& i){return !i.isAlive(); });
+	for (std::list<Projectile>::iterator it = _projectileList.begin(); it != _projectileList.end(); )
+	{
+		if (!it->isAlive()) _projectileList.erase(it++);
+		else ++it;
+	}
+
+	for (std::list<Target>::iterator it = _targetList.begin(); it != _targetList.end();)
+	{
+		if (!it->isAlive()) _targetList.erase(it++);
+		else ++it;
+	}
 }
 
 /// Пополняет очередь эффектов, и возвращает на нее ссылку.
@@ -82,12 +93,9 @@ void GameObjectContainer::disableMagnet()
 
 void GameObjectContainer::checkWallCollision(GameObject& g_object)
 {
-	float radius = g_object.getRadius();
-	FPoint pos = g_object.getPosition();
-	if (pos.x - radius < _sceneRect.x) g_object.hitWall(FPoint(1, 0));
-	else if (pos.x + radius > _sceneRect.width) g_object.hitWall(FPoint(-1, 0));
-	if (pos.y - radius < _sceneRect.y) g_object.hitWall(FPoint(0, 1));
-	else if (pos.y + radius > _sceneRect.height) g_object.hitWall(FPoint(0, -1));
+	IPoint normal = g_object.isInsideRect(_sceneRect);
+	if (normal != IPoint(0, 0))
+		g_object.hitWall(normal);
 }
 
 bool GameObjectContainer::checkForDestroy(GameObject& g_object)
